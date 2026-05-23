@@ -487,6 +487,110 @@ body {
 }
 .btn-pdf:active { background: rgba(61,184,122,0.15); }
 
+/* ─── LISTAS SALVAS ─── */
+.lists-modal .modal { max-height: 88vh; overflow-y: auto; }
+
+.slot-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 11px 13px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.slot-card.active {
+  border-color: var(--accent);
+  background: rgba(61,184,122,0.06);
+}
+.slot-card.empty {
+  border-style: dashed;
+  opacity: 0.6;
+}
+.slot-info {
+  flex: 1;
+  min-width: 0;
+}
+.slot-name {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.slot-meta {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.slot-badge {
+  font-size: 10px;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  background: var(--accent);
+  color: #031a0b;
+  border-radius: 6px;
+  padding: 2px 7px;
+  white-space: nowrap;
+}
+.slot-badge.empty-badge {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+.slot-actions {
+  display: flex;
+  gap: 5px;
+}
+.btn-slot-action {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 16px;
+  padding: 6px 9px;
+  cursor: pointer;
+  line-height: 1;
+}
+.btn-slot-action:active { background: rgba(61,184,122,0.12); color: var(--accent); }
+.btn-slot-load {
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  color: #031a0b;
+  font-family: 'Syne', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+.btn-slot-load:active { background: #2e9e63; }
+.btn-slot-save-here {
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  color: var(--accent);
+  font-family: 'Syne', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+.btn-slot-save-here:active { background: rgba(61,184,122,0.12); }
+.slot-current-tag {
+  font-size: 9px;
+  background: rgba(61,184,122,0.15);
+  color: var(--accent);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
 /* emoji */
 .emoji-picker {
   display: grid;
@@ -562,6 +666,47 @@ body {
   transition: opacity 0.2s;
 }
 .obs-badge.has-content { opacity: 1; }
+
+/* ─── PESO / KG ─── */
+.item-row4 {
+  display: flex;
+  gap: 6px;
+  margin-top: 5px;
+  align-items: center;
+}
+
+.weight-label {
+  font-size: 10px;
+  color: var(--muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.weight-input {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--accent2);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 8px;
+  outline: none;
+  width: 72px;
+  flex-shrink: 0;
+}
+.weight-input:focus { border-color: var(--accent); }
+.weight-input::placeholder { color: var(--border); }
+
+.weight-calc {
+  font-size: 11px;
+  color: var(--accent);
+  font-weight: 600;
+  font-family: 'Syne', sans-serif;
+  flex: 1;
+  text-align: right;
+  min-width: 0;
+}
 
 /* ─── MODAL DE CONFIRMAÇÃO DE SAÍDA ─── */
 #exitModal {
@@ -728,6 +873,7 @@ body {
 <div class="bottom-bar">
   <button class="btn-settings" onclick="openSettings()">⚙️</button>
   <button class="btn-save" id="btnSave" onclick="saveState()" title="Salvar">💾</button>
+  <button class="btn-settings" onclick="openLists()" title="Listas salvas" style="font-size:18px;">🗂️</button>
   <button class="btn-share" onclick="openShare()">📤 Gerar resumo</button>
 </div>
 
@@ -783,6 +929,18 @@ body {
   </div>
 </div>
 
+<!-- MODAL listas salvas -->
+<div class="modal-overlay lists-modal" id="listsModal">
+  <div class="modal" style="padding-bottom:30px">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🗂️ Listas salvas</div>
+    <div id="listsContainer"></div>
+    <div class="modal-row" style="margin-top:8px">
+      <button class="btn-modal-cancel" onclick="closeModal('listsModal')">Fechar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL configurações -->
 <div class="modal-overlay" id="settingsModal">
   <div class="modal">
@@ -821,12 +979,251 @@ body {
 function uid() { return Math.random().toString(36).slice(2,9); }
 
 // ─── PERSISTÊNCIA (localStorage) ───
-const STORAGE_KEY = 'natitur_state_v1';
+const STORAGE_KEY    = 'natitur_state_v1';
+const SLOTS_KEY      = 'natitur_slots_v1';   // array de 5 slots
+const CUR_SLOT_KEY   = 'natitur_cur_slot';   // índice do slot ativo
+const MAX_SLOTS      = 5;
 let _isDirty = false;
+let _currentSlot = null; // null = não vinculado a nenhum slot
+
+// ── Churrasco Canastra pré-carregado ──
+const CANASTRA_LIST = {
+  eventName: 'Churrasco Canastra',
+  people: '37',
+  col1Label: 'Qtd',
+  col2Label: 'Un',
+  savedAt: '23/05/2026',
+  categories: [
+    { id:'c1', emoji:'🥩', name:'Carnes', items:[
+      { id:'i1',  emoji:'🥩', name:'Picanha',                  col1:'2',   col2:'pç',  price:'157',  brand:'Friboi Matura',  obs:'Média de 1,6 kg a peça (99,90/kg)',  pesoMedio:'1.6',  precoKg:'99.9' },
+      { id:'i2',  emoji:'🍖', name:'Fraldinha',                col1:'1',   col2:'pç',  price:'64',   brand:'Friboi Matura',  obs:'Média de 0,9 kg a peça (69,90/kg)',  pesoMedio:'0.9',  precoKg:'69.9' },
+      { id:'i3',  emoji:'🌭', name:'Linguiça de Costela c/ Queijo coalho', col1:'4', col2:'pct', price:'29.9', brand:'Carapreta', obs:'420g cada pct', pesoMedio:'', precoKg:'' },
+      { id:'i4',  emoji:'🥩', name:'Lombo Suíno temperado',   col1:'3',   col2:'pç',  price:'33',   brand:'Suinco',         obs:'Média de 1,1 kg a peça (29,90/kg)', pesoMedio:'1.1',  precoKg:'29.9' },
+      { id:'i5',  emoji:'🥩', name:'Bananinha',               col1:'1',   col2:'pct', price:'52',   brand:'Friboi',         obs:'Média 1,1 kg o pacote',             pesoMedio:'1.1',  precoKg:'' },
+      { id:'i6',  emoji:'🥩', name:'Coraçãozinho',            col1:'2',   col2:'Kg',  price:'35',   brand:'',               obs:'',                                  pesoMedio:'',     precoKg:'' },
+      { id:'i7',  emoji:'🥩', name:'Maminha da Alcatra',      col1:'2',   col2:'pç',  price:'95',   brand:'Friboi 1953',    obs:'Média de 1,2kg a pç',               pesoMedio:'1.2',  precoKg:'' },
+    ]},
+    { id:'c2', emoji:'🥗', name:'Acompanhamentos', items:[
+      { id:'i8',  emoji:'🍞', name:'Pão de alho',             col1:'4',   col2:'pct', price:'24',   brand:'Beagô',          obs:'Tradicional, 4 queijos',            pesoMedio:'',     precoKg:'' },
+      { id:'i9',  emoji:'🍍', name:'Abacaxi',                 col1:'4',   col2:'Un',  price:'10.99',brand:'',               obs:'',                                  pesoMedio:'',     precoKg:'' },
+      { id:'i10', emoji:'🍋', name:'Limão Siciliano',         col1:'0.350',col2:'Kg', price:'9.9',  brand:'',               obs:'',                                  pesoMedio:'',     precoKg:'' },
+      { id:'i11', emoji:'🧀', name:'Queijo coalho',           col1:'3',   col2:'pct', price:'30',   brand:'Curral de Minas',obs:'Média de 0,33 kg o pacote (84,90/kg)',pesoMedio:'0.33',precoKg:'84.9'},
+      { id:'i12', emoji:'🍌', name:'Banana Caturra',          col1:'1.5', col2:'Kg',  price:'3.99', brand:'',               obs:'',                                  pesoMedio:'',     precoKg:'' },
+      { id:'i13', emoji:'🫙', name:'Leite Condensado',        col1:'2',   col2:'Un',  price:'',     brand:'',               obs:'',                                  pesoMedio:'',     precoKg:'' },
+      { id:'i14', emoji:'🫙', name:'Creme de Leite',          col1:'3',   col2:'Un',  price:'',     brand:'',               obs:'',                                  pesoMedio:'',     precoKg:'' },
+      { id:'i15', emoji:'🧀', name:'Queijo provolone',        col1:'1',   col2:'un',  price:'43',   brand:'Porto Alegre',   obs:'Média 0,5 kg a unidade (79,90/kg)', pesoMedio:'0.5',  precoKg:'79.9' },
+    ]},
+    { id:'c3', emoji:'🧻', name:'Utensílios e Insumos', items:[
+      { id:'i16', emoji:'🧻', name:'Papel toalha',            col1:'1',   col2:'pct', price:'15',   brand:'Scala',          obs:'3 rolos por pacote',                pesoMedio:'',     precoKg:'' },
+      { id:'i17', emoji:'🧴', name:'Álcool em gel para limpeza', col1:'1',col2:'Un', price:'9',    brand:'Gelálcool',      obs:'',                                  pesoMedio:'',     precoKg:'' },
+    ]},
+  ]
+};
+
+function getSlotsRaw() {
+  try {
+    const raw = localStorage.getItem(SLOTS_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw);
+  } catch(e) { return []; }
+}
+
+function saveSlotsRaw(slots) {
+  try { localStorage.setItem(SLOTS_KEY, JSON.stringify(slots)); } catch(e) { console.warn(e); }
+}
+
+// Inicializa slots com Canastra no slot 0 se ainda não existir
+function initSlots() {
+  let slots = getSlotsRaw();
+  if (slots.length === 0) {
+    // Primeira vez: pré-carrega Canastra no slot 0
+    slots = [JSON.parse(JSON.stringify(CANASTRA_LIST)), null, null, null, null];
+    saveSlotsRaw(slots);
+  } else {
+    // Garante sempre 5 slots
+    while (slots.length < MAX_SLOTS) slots.push(null);
+    saveSlotsRaw(slots);
+  }
+}
+
+function saveToSlot(idx) {
+  const slots = getSlotsRaw();
+  const snapshot = JSON.parse(JSON.stringify(state));
+  snapshot.savedAt = new Date().toLocaleDateString('pt-BR');
+  slots[idx] = snapshot;
+  saveSlotsRaw(slots);
+  localStorage.setItem(CUR_SLOT_KEY, String(idx));
+  _currentSlot = idx;
+  _isDirty = false;
+  showSaveToast();
+  renderListsModal();
+}
+
+function loadFromSlot(idx) {
+  const slots = getSlotsRaw();
+  const slot = slots[idx];
+  if (!slot) return;
+  // Garante campos novos em itens antigos
+  slot.categories.forEach(cat => {
+    cat.items.forEach(item => {
+      if (item.pesoMedio === undefined) item.pesoMedio = '';
+      if (item.precoKg === undefined)   item.precoKg   = '';
+    });
+  });
+  Object.assign(state, JSON.parse(JSON.stringify(slot)));
+  localStorage.setItem(CUR_SLOT_KEY, String(idx));
+  _currentSlot = idx;
+  _isDirty = false;
+  closeModal('listsModal');
+  render();
+  recalcTotals();
+  showToast(`✅ "${state.eventName}" carregado!`);
+}
+
+function deleteSlot(idx) {
+  const slots = getSlotsRaw();
+  const name = slots[idx] ? slots[idx].eventName : '';
+  if (!confirm(`Apagar "${name}" do slot ${idx+1}?`)) return;
+  slots[idx] = null;
+  saveSlotsRaw(slots);
+  if (_currentSlot === idx) { _currentSlot = null; localStorage.removeItem(CUR_SLOT_KEY); }
+  renderListsModal();
+}
+
+function openSaveToSlotDialog(idx) {
+  const slots = getSlotsRaw();
+  const existing = slots[idx];
+  const msg = existing
+    ? `Substituir "${existing.eventName}" pelo evento atual "${state.eventName}"?`
+    : `Salvar "${state.eventName}" no slot ${idx+1}?`;
+  if (confirm(msg)) saveToSlot(idx);
+}
+
+function renderListsModal() {
+  const slots = getSlotsRaw();
+  const container = document.getElementById('listsContainer');
+  if (!container) return;
+  container.innerHTML = '';
+
+  slots.forEach((slot, idx) => {
+    const card = document.createElement('div');
+    card.className = 'slot-card' + (!slot ? ' empty' : '') + (_currentSlot === idx ? ' active' : '');
+
+    const numBadge = document.createElement('div');
+    numBadge.style.cssText = 'font-family:Syne,sans-serif;font-weight:800;font-size:18px;color:var(--muted);width:22px;flex-shrink:0;text-align:center;';
+    numBadge.textContent = idx + 1;
+
+    const info = document.createElement('div');
+    info.className = 'slot-info';
+
+    if (slot) {
+      // Calcula total
+      let total = 0;
+      slot.categories.forEach(cat => cat.items.forEach(item => {
+        total += (parseFloat(item.col1)||0) * (parseFloat(item.price)||0);
+      }));
+      const totalStr = total > 0 ? `R$ ${total.toFixed(2).replace('.',',')}` : 'sem valores';
+      const items = slot.categories.reduce((s,c) => s + c.items.length, 0);
+
+      const nameEl = document.createElement('div');
+      nameEl.className = 'slot-name';
+      nameEl.textContent = slot.eventName || 'Sem nome';
+
+      const metaEl = document.createElement('div');
+      metaEl.className = 'slot-meta';
+      metaEl.textContent = `${items} itens · ${totalStr}${slot.people ? ' · '+slot.people+' pessoas' : ''}`;
+      if (slot.savedAt) metaEl.textContent += ` · salvo ${slot.savedAt}`;
+
+      info.appendChild(nameEl);
+      info.appendChild(metaEl);
+
+      if (_currentSlot === idx) {
+        const tag = document.createElement('span');
+        tag.className = 'slot-current-tag';
+        tag.textContent = 'ATIVO';
+        info.appendChild(document.createTextNode(' '));
+        nameEl.appendChild(document.createTextNode(' '));
+        nameEl.appendChild(tag);
+      }
+    } else {
+      const emptyEl = document.createElement('div');
+      emptyEl.className = 'slot-name';
+      emptyEl.style.color = 'var(--muted)';
+      emptyEl.textContent = 'Slot vazio';
+      info.appendChild(emptyEl);
+    }
+
+    const actions = document.createElement('div');
+    actions.className = 'slot-actions';
+
+    if (slot) {
+      const loadBtn = document.createElement('button');
+      loadBtn.className = 'btn-slot-load';
+      loadBtn.textContent = '📂';
+      loadBtn.title = 'Carregar lista';
+      loadBtn.onclick = () => {
+        if (_isDirty) {
+          showExitModal(() => loadFromSlot(idx));
+        } else {
+          loadFromSlot(idx);
+        }
+      };
+
+      const saveHereBtn = document.createElement('button');
+      saveHereBtn.className = 'btn-slot-save-here';
+      saveHereBtn.textContent = '💾';
+      saveHereBtn.title = 'Salvar lista atual aqui';
+      saveHereBtn.onclick = () => openSaveToSlotDialog(idx);
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'btn-slot-action';
+      delBtn.textContent = '🗑';
+      delBtn.title = 'Apagar slot';
+      delBtn.onclick = () => deleteSlot(idx);
+
+      actions.appendChild(loadBtn);
+      actions.appendChild(saveHereBtn);
+      actions.appendChild(delBtn);
+    } else {
+      const saveHereBtn = document.createElement('button');
+      saveHereBtn.className = 'btn-slot-save-here';
+      saveHereBtn.textContent = '💾 Salvar aqui';
+      saveHereBtn.onclick = () => saveToSlot(idx);
+      actions.appendChild(saveHereBtn);
+    }
+
+    card.appendChild(numBadge);
+    card.appendChild(info);
+    card.appendChild(actions);
+    container.appendChild(card);
+  });
+}
+
+function openLists() {
+  renderListsModal();
+  document.getElementById('listsModal').classList.add('open');
+}
+
+function showToast(msg) {
+  let toast = document.getElementById('saveToast');
+  if (!toast) return;
+  toast.textContent = msg;
+  toast.classList.add('visible');
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => { toast.classList.remove('visible'); toast.textContent = '✅ Salvo!'; }, 2200);
+}
 
 function saveState() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    // Se tem slot ativo, salva lá também
+    if (_currentSlot !== null) {
+      const slots = getSlotsRaw();
+      const snapshot = JSON.parse(JSON.stringify(state));
+      snapshot.savedAt = new Date().toLocaleDateString('pt-BR');
+      slots[_currentSlot] = snapshot;
+      saveSlotsRaw(slots);
+    }
     _isDirty = false;
     showSaveToast();
   } catch(e) { console.warn('Erro ao salvar:', e); }
@@ -838,13 +1235,18 @@ function loadState() {
     if (!raw) return false;
     const saved = JSON.parse(raw);
     Object.assign(state, saved);
+    // Restaura slot ativo
+    const cur = localStorage.getItem(CUR_SLOT_KEY);
+    if (cur !== null) _currentSlot = parseInt(cur);
     return true;
   } catch(e) { return false; }
 }
 
 function clearState() {
   localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(CUR_SLOT_KEY);
   _isDirty = false;
+  _currentSlot = null;
 }
 
 function showSaveToast() {
@@ -899,17 +1301,17 @@ const state = {
   col2Label: 'Un',
   categories: [
     { id: uid(), emoji:'🥩', name:'Carnes', items:[
-      { id:uid(), emoji:'🥩', name:'Picanha',   col1:'', col2:'kg', price:'', brand:'', obs:'' },
-      { id:uid(), emoji:'🍖', name:'Fraldinha',  col1:'', col2:'kg', price:'', brand:'', obs:'' },
-      { id:uid(), emoji:'🌭', name:'Linguiça',   col1:'', col2:'kg', price:'', brand:'', obs:'' },
+      { id:uid(), emoji:'🥩', name:'Picanha',   col1:'', col2:'kg', price:'', brand:'', obs:'', pesoMedio:'', precoKg:'' },
+      { id:uid(), emoji:'🍖', name:'Fraldinha',  col1:'', col2:'kg', price:'', brand:'', obs:'', pesoMedio:'', precoKg:'' },
+      { id:uid(), emoji:'🌭', name:'Linguiça',   col1:'', col2:'kg', price:'', brand:'', obs:'', pesoMedio:'', precoKg:'' },
     ]},
     { id: uid(), emoji:'🥗', name:'Acompanhamentos', items:[
-      { id:uid(), emoji:'🍞', name:'Pão de alho', col1:'', col2:'un', price:'', brand:'', obs:'' },
-      { id:uid(), emoji:'🫙', name:'Farofa',       col1:'', col2:'kg', price:'', brand:'', obs:'' },
+      { id:uid(), emoji:'🍞', name:'Pão de alho', col1:'', col2:'un', price:'', brand:'', obs:'', pesoMedio:'', precoKg:'' },
+      { id:uid(), emoji:'🫙', name:'Farofa',       col1:'', col2:'kg', price:'', brand:'', obs:'', pesoMedio:'', precoKg:'' },
     ]},
     { id: uid(), emoji:'🍺', name:'Bebidas', items:[
-      { id:uid(), emoji:'🍺', name:'Cerveja',      col1:'', col2:'cx', price:'', brand:'', obs:'' },
-      { id:uid(), emoji:'🥤', name:'Refrigerante', col1:'', col2:'L',  price:'', brand:'', obs:'' },
+      { id:uid(), emoji:'🍺', name:'Cerveja',      col1:'', col2:'cx', price:'', brand:'', obs:'', pesoMedio:'', precoKg:'' },
+      { id:uid(), emoji:'🥤', name:'Refrigerante', col1:'', col2:'L',  price:'', brand:'', obs:'', pesoMedio:'', precoKg:'' },
     ]},
   ]
 };
@@ -1096,10 +1498,77 @@ function buildItemCard(catId, item) {
   row3.appendChild(obsBadge);
   row3.appendChild(obsInp);
 
+  // row 4 — peso médio + preço/kg (opcional)
+  const row4 = document.createElement('div');
+  row4.className = 'item-row4';
+
+  const weightLabel = document.createElement('span');
+  weightLabel.className = 'weight-label';
+  weightLabel.textContent = '⚖️ Peso médio:';
+
+  const pesoInp = document.createElement('input');
+  pesoInp.className = 'weight-input';
+  pesoInp.type = 'number';
+  pesoInp.inputMode = 'decimal';
+  pesoInp.placeholder = 'kg';
+  pesoInp.value = item.pesoMedio || '';
+  pesoInp.title = 'Peso médio por unidade (kg)';
+
+  const kgLabel = document.createElement('span');
+  kgLabel.className = 'weight-label';
+  kgLabel.textContent = 'R$/kg:';
+
+  const kgInp = document.createElement('input');
+  kgInp.className = 'weight-input';
+  kgInp.type = 'number';
+  kgInp.inputMode = 'decimal';
+  kgInp.placeholder = '0,00';
+  kgInp.value = item.precoKg || '';
+  kgInp.title = 'Preço por kg';
+
+  const calcSpan = document.createElement('span');
+  calcSpan.className = 'weight-calc';
+
+  function updateWeightCalc() {
+    item.pesoMedio = pesoInp.value;
+    item.precoKg   = kgInp.value;
+    const pm = parseFloat(item.pesoMedio) || 0;
+    const pk = parseFloat(item.precoKg) || 0;
+    if (pm > 0 && pk > 0) {
+      const unitPrice = pm * pk;
+      calcSpan.textContent = `≈ R$ ${unitPrice.toFixed(2).replace('.',',')} /un`;
+      // auto-fill price field if empty
+      if (!item.price) {
+        item.price = unitPrice.toFixed(2);
+        inp3.value = item.price;
+        updateSubtotal(card, item);
+        recalcTotals();
+      }
+    } else {
+      calcSpan.textContent = '';
+    }
+    markDirty();
+  }
+
+  pesoInp.oninput = updateWeightCalc;
+  kgInp.oninput   = updateWeightCalc;
+
+  // init display
+  const pm0 = parseFloat(item.pesoMedio) || 0;
+  const pk0 = parseFloat(item.precoKg) || 0;
+  if (pm0 > 0 && pk0 > 0) calcSpan.textContent = `≈ R$ ${(pm0*pk0).toFixed(2).replace('.',',')} /un`;
+
+  row4.appendChild(weightLabel);
+  row4.appendChild(pesoInp);
+  row4.appendChild(kgLabel);
+  row4.appendChild(kgInp);
+  row4.appendChild(calcSpan);
+
   card.appendChild(row1);
   card.appendChild(row2);
   card.appendChild(subLine);
   card.appendChild(row3);
+  card.appendChild(row4);
 
   updateSubtotal(card, item);
   return card;
@@ -1144,7 +1613,7 @@ function recalcTotals() {
 // ════════════════════════════════════════
 function addItem(catId) {
   const cat = state.categories.find(c => c.id === catId);
-  const item = { id: uid(), emoji: '📦', name: '', col1: '', col2: state.col2Label, price: '', brand: '', obs: '' };
+  const item = { id: uid(), emoji: '📦', name: '', col1: '', col2: state.col2Label, price: '', brand: '', obs: '', pesoMedio: '', precoKg: '' };
   cat.items.push(item);
 
   // insert card before the add button
@@ -1161,7 +1630,28 @@ function addItem(catId) {
 // ════════════════════════════════════════
 //  EMOJI PICKER
 // ════════════════════════════════════════
-const EMOJIS = ['🥩','🍖','🌭','🍗','🥚','🧀','🫙','🥗','🍞','🥬','🧅','🧄','🍋','🍺','🥤','🧃','💧','🧊','🍫','🍬','🛒','🔥','🫕','🥘','🍲','🧆','🫔','🌮','🥙','🍱','🧂','🫒','🥑','🌽','🫑','🍅'];
+const EMOJIS = [
+  // Carnes
+  '🥩','🍖','🌭','🍗','🥓','🫀','🐄','🐖','🐔',
+  // Frutos do mar / proteína
+  '🦐','🦑','🐟','🥚',
+  // Queijos e laticínios
+  '🧀','🥛','🫙',
+  // Acompanhamentos / vegetais
+  '🥗','🍞','🥬','🧅','🧄','🫑','🌽','🍅','🥑','🫒','🧆','🥔','🥕','🍄',
+  // Frutas
+  '🍋','🍌','🍍','🍉','🍑','🍇','🫐','🍓','🍊','🍎',
+  // Bebidas
+  '🍺','🍻','🥂','🍷','🥤','🧃','💧','🧊','☕','🧉',
+  // Doces / sobremesa
+  '🍫','🍬','🍮','🍨','🍰','🎂',
+  // Condimentos / temperos
+  '🧂','🌶️','🫙','🍯','🥫',
+  // Utensílios / insumos / outros
+  '🛒','🔥','🧴','🧻','🪣','🧹','🧽','🪥','🔦','🧯',
+  // Categorias gerais
+  '🫕','🥘','🍲','🧆','🫔','🌮','🥙','🍱','🛍️','📦','💰','⭐',
+];
 
 function pickEmoji(type, catId, itemId) {
   pendingEmojiTarget = { type, catId, itemId };
@@ -1284,6 +1774,8 @@ function buildShareText() {
       let line = `  • ${item.name || '(sem nome)'}`;
       if (item.brand) line += ` [${item.brand}]`;
       if (item.col1) line += `  ${item.col1}${item.col2 ? ' '+item.col2 : ''}`;
+      if (item.pesoMedio) line += `  ~${item.pesoMedio}kg/un`;
+      if (item.precoKg)  line += `  (R$${parseFloat(item.precoKg).toFixed(2).replace('.',',')}/kg)`;
       if (item.price) line += `  × R$${p.toFixed(2).replace('.',',')}`;
       if (sub > 0) line += `  = *R$${sub.toFixed(2).replace('.',',')}*`;
       if (item.obs) line += `\n    _(${item.obs})_`;
@@ -1327,251 +1819,284 @@ function exportPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
 
-  const W = 210; // page width mm
+  const W = 210;
   const MARGIN = 14;
   const CONTENT_W = W - MARGIN * 2;
 
-  // ── CORES ──
-  const C_BG      = [11, 26, 18];
-  const C_SURFACE = [16, 32, 25];
-  const C_CARD    = [22, 42, 30];
-  const C_BORDER  = [35, 71, 51];
-  const C_ACCENT  = [61, 184, 122];
-  const C_ACCENT2 = [126, 232, 176];
-  const C_AMBER   = [245, 166, 35];
-  const C_TEXT    = [232, 245, 238];
-  const C_MUTED   = [106, 158, 128];
-  const C_WHITE   = [255, 255, 255];
+  // ── PALETA: fundo BRANCO para máximo contraste ──
+  const C_WHITE    = [255, 255, 255];
+  const C_BG_PAGE  = [250, 253, 251];   // branco levemente esverdeado
+  const C_HEADER   = [11, 38, 24];      // verde muito escuro para cabeçalho
+  const C_ACCENT   = [45, 160, 100];    // verde médio
+  const C_ACCENT_L = [61, 184, 122];    // verde claro
+  const C_AMBER    = [200, 120, 10];    // âmbar escuro (contrasta no branco)
+  const C_TEXT     = [20, 40, 28];      // quase preto esverdeado
+  const C_MUTED    = [80, 120, 95];     // cinza-verde médio
+  const C_BORDER   = [180, 215, 195];   // borda suave
+  const C_ROW_ALT  = [237, 248, 242];   // linha alternada leve
+  const C_CAT_HDR  = [22, 68, 44];      // cabeçalho categoria escuro
+  const C_CHIP_BG  = [230, 245, 237];   // chip totais
+  const C_FOOTER   = [22, 68, 44];      // rodapé escuro
 
-  // ── HELPERS ──
   function setFill(rgb) { doc.setFillColor(...rgb); }
   function setDraw(rgb) { doc.setDrawColor(...rgb); }
   function setTxt(rgb)  { doc.setTextColor(...rgb); }
-  function rect(x, y, w, h, r) {
+  function fillRect(x, y, w, h, r) {
     if (r) doc.roundedRect(x, y, w, h, r, r, 'F');
     else doc.rect(x, y, w, h, 'F');
   }
 
-  let y = 0;
-
-  // ══════════════════════════════════════
-  //  CABEÇALHO
-  // ══════════════════════════════════════
-  // Fundo escuro do header
-  setFill(C_BG);
-  rect(0, 0, W, 52);
-
-  // Borda inferior do header
-  setDraw(C_BORDER);
-  doc.setLineWidth(0.4);
-  doc.line(0, 52, W, 52);
-
-  // Logo SVG desenhado manualmente
-  const lx = MARGIN, ly = 10;
-
-  // Círculo (lua/sol)
-  setDraw(C_ACCENT); doc.setLineWidth(0.8);
-  doc.circle(lx + 14, ly + 14, 7, 'S');
-
-  // Montanhas
-  setDraw(C_ACCENT2); doc.setLineWidth(1);
-  doc.lines([[6,-9],[4,5],[4,-7],[6,11]], lx+5, ly+18, [1,1], 'S');
-
-  // Raios do sol (amber)
-  setDraw(C_AMBER); doc.setLineWidth(0.8);
-  doc.line(lx+14, ly+2,  lx+14, ly+5);
-  doc.line(lx+19, ly+4,  lx+17.5, ly+6.5);
-  doc.line(lx+9,  ly+4,  lx+10.5, ly+6.5);
-  doc.line(lx+22, ly+8,  lx+20,   ly+9.5);
-  doc.line(lx+6,  ly+8,  lx+8,    ly+9.5);
-
-  // Linha do chão
-  setDraw(C_BORDER); doc.setLineWidth(0.8);
-  doc.line(lx+3, ly+20, lx+25, ly+20);
-
-  // Nome "Natitur"
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(22);
-  setTxt(C_ACCENT2);
-  doc.text('Natitur', lx + 32, ly + 13);
-
-  // Tagline
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7);
-  setTxt(C_MUTED);
-  doc.text('NATUREZA · VIAGENS', lx + 32, ly + 18);
-
-  // Nome do evento (direita)
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
-  setTxt(C_ACCENT);
-  const evName = state.eventName || 'Evento';
-  doc.text(evName, W - MARGIN, ly + 13, { align: 'right' });
-
-  // Data
-  const dateStr = new Date().toLocaleDateString('pt-BR');
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
-  setTxt(C_MUTED);
-  doc.text(dateStr, W - MARGIN, ly + 19, { align: 'right' });
-
-  // ── CHIPS DE TOTAIS ──
-  let grand = 0;
-  let totalItems = 0;
+  // Pré-calcula totais
+  let grand = 0, totalItems = 0;
   state.categories.forEach(cat => {
     cat.items.forEach(item => {
-      const q = parseFloat(item.col1) || 0;
-      const p = parseFloat(item.price) || 0;
-      grand += q * p;
+      grand += (parseFloat(item.col1)||0) * (parseFloat(item.price)||0);
       totalItems++;
     });
   });
   const perPerson = (state.people && grand > 0)
     ? (grand / parseFloat(state.people)).toFixed(2).replace('.', ',')
     : null;
+  const dateStr = new Date().toLocaleDateString('pt-BR');
 
+  // ── Função: nova página com fundo ──
+  function newPage() {
+    doc.addPage();
+    setFill(C_BG_PAGE); fillRect(0, 0, W, 297);
+    drawFooter();
+  }
+
+  function drawFooter() {
+    setFill(C_FOOTER);
+    fillRect(0, 285, W, 12);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    setTxt([180, 220, 200]);
+    doc.text('Natitur  |  natureza · viagens', MARGIN, 291);
+    doc.text(`Gerado em ${dateStr}`, W - MARGIN, 291, { align: 'right' });
+  }
+
+  // ════════════════════════
+  //  PÁG. 1: FUNDO + HEADER
+  // ════════════════════════
+  setFill(C_BG_PAGE); fillRect(0, 0, W, 297);
+
+  // Header escuro
+  setFill(C_HEADER); fillRect(0, 0, W, 56);
+
+  // Faixa accent no topo
+  setFill(C_ACCENT_L); fillRect(0, 0, W, 2.5);
+
+  // Logo (desenho vetorial simples)
+  const lx = MARGIN, ly = 10;
+  // Círculo
+  setDraw(C_ACCENT_L); doc.setLineWidth(1);
+  doc.circle(lx + 13, ly + 13, 7, 'S');
+  // Montanhas
+  setDraw([200,240,220]); doc.setLineWidth(1.2);
+  doc.lines([[5,-8],[4,5],[4,-7],[6,10]], lx+4, ly+17, [1,1], 'S');
+  // Raios do sol
+  setDraw([245,190,80]); doc.setLineWidth(0.9);
+  doc.line(lx+13, ly+2, lx+13, ly+5);
+  doc.line(lx+18, ly+4, lx+16.5, ly+6.5);
+  doc.line(lx+8,  ly+4, lx+9.5,  ly+6.5);
+  doc.line(lx+21, ly+8, lx+19,   ly+9.5);
+  doc.line(lx+5,  ly+8, lx+7,    ly+9.5);
+  // Linha chão
+  setDraw([50,100,70]); doc.setLineWidth(0.7);
+  doc.line(lx+2, ly+20, lx+24, ly+20);
+
+  // Nome Natitur
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(24);
+  setTxt([200, 240, 218]);
+  doc.text('Natitur', lx + 30, ly + 14);
+
+  // Tagline
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  setTxt([100, 170, 135]);
+  doc.text('NATUREZA  ·  VIAGENS', lx + 30, ly + 20);
+
+  // Nome do evento + data (direita, no header escuro)
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  setTxt(C_ACCENT_L);
+  doc.text(state.eventName || 'Evento', W - MARGIN, ly + 12, { align: 'right' });
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  setTxt([120, 180, 150]);
+  doc.text(dateStr, W - MARGIN, ly + 19, { align: 'right' });
+  if (state.people) {
+    doc.setFontSize(7.5);
+    setTxt([100,160,130]);
+    doc.text(`${state.people} pessoas`, W - MARGIN, ly + 25, { align: 'right' });
+  }
+
+  // ── CHIPS ──
   const chips = [
-    { label: 'ITENS',    value: String(totalItems) },
-    { label: 'PESSOAS',  value: state.people || '—' },
-    { label: 'TOTAL',    value: `R$ ${grand.toFixed(2).replace('.', ',')}`, highlight: true },
+    { label: 'ITENS',     value: String(totalItems) },
+    { label: 'PESSOAS',   value: state.people || '—' },
+    { label: 'TOTAL',     value: `R$ ${grand.toFixed(2).replace('.', ',')}`, hi: true },
   ];
   if (perPerson) chips.push({ label: 'POR PESSOA', value: `R$ ${perPerson}` });
 
-  const chipW = (CONTENT_W - (chips.length - 1) * 3) / chips.length;
+  const chipW = (CONTENT_W - (chips.length - 1) * 4) / chips.length;
+  const chipY = 59;
   chips.forEach((chip, i) => {
-    const cx = MARGIN + i * (chipW + 3);
-    const cy = 55;
-    setFill(C_SURFACE);
-    rect(cx, cy, chipW, 16, 3);
-    setDraw(C_BORDER); doc.setLineWidth(0.3);
-    doc.roundedRect(cx, cy, chipW, 16, 3, 3, 'S');
+    const cx = MARGIN + i * (chipW + 4);
+    setFill(chip.hi ? C_ACCENT : C_CHIP_BG);
+    fillRect(cx, chipY, chipW, 17, 3);
+    setDraw(chip.hi ? C_ACCENT_L : C_BORDER); doc.setLineWidth(0.3);
+    doc.roundedRect(cx, chipY, chipW, 17, 3, 3, 'S');
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(6);
-    setTxt(C_MUTED);
-    doc.text(chip.label, cx + chipW / 2, cy + 5.5, { align: 'center' });
+    setTxt(chip.hi ? [200,255,230] : C_MUTED);
+    doc.text(chip.label, cx + chipW / 2, chipY + 5.5, { align: 'center' });
 
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(chip.highlight ? 11 : 9);
-    setTxt(chip.highlight ? C_ACCENT : C_TEXT);
-    doc.text(chip.value, cx + chipW / 2, cy + 12, { align: 'center' });
+    doc.setFontSize(chip.hi ? 11 : 9);
+    setTxt(chip.hi ? C_WHITE : C_TEXT);
+    doc.text(chip.value, cx + chipW / 2, chipY + 13, { align: 'center' });
   });
 
-  y = 80;
+  let y = 84;
 
-  // ══════════════════════════════════════
+  // ════════════════════════
   //  CATEGORIAS
-  // ══════════════════════════════════════
+  // ════════════════════════
+  // Colunas do PDF (sem emoji)
+  const COL_NAME  = MARGIN + 3;
+  const COL_BRAND = MARGIN + 75;
+  const COL_QTD   = MARGIN + 112;
+  const COL_UN    = MARGIN + 126;
+  const COL_UNIT  = MARGIN + 143;
+  const COL_SUB   = W - MARGIN;
+
   state.categories.forEach(cat => {
-    // Calcular total da categoria
     let catTotal = 0;
     cat.items.forEach(item => {
-      const q = parseFloat(item.col1) || 0;
-      const p = parseFloat(item.price) || 0;
-      catTotal += q * p;
+      catTotal += (parseFloat(item.col1)||0) * (parseFloat(item.price)||0);
     });
 
-    // Verificar quebra de página (deixar espaço para header da categoria + 1 item)
-    if (y + 28 > 280) { doc.addPage(); setFill(C_BG); rect(0,0,W,297); y = 14; }
+    const needed = 14 + cat.items.length * 11 + 10;
+    if (y + Math.min(needed, 30) > 280) { newPage(); y = 14; }
 
-    // Header da categoria
-    setFill(C_SURFACE);
-    rect(MARGIN, y, CONTENT_W, 11, 2);
-    setDraw(C_BORDER); doc.setLineWidth(0.3);
-    doc.roundedRect(MARGIN, y, CONTENT_W, 11, 2, 2, 'S');
+    // ── Header da categoria ──
+    setFill(C_CAT_HDR);
+    fillRect(MARGIN, y, CONTENT_W, 12, 2.5);
 
-    // Borda esquerda colorida (accent)
-    setFill(C_ACCENT);
-    rect(MARGIN, y, 2.5, 11, 1);
+    // Faixa accent esquerda
+    setFill(C_ACCENT_L);
+    fillRect(MARGIN, y, 3, 12, 1.5);
 
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8);
-    setTxt(C_TEXT);
-    doc.text(`${cat.emoji}  ${cat.name.toUpperCase()}`, MARGIN + 7, y + 7);
+    doc.setFontSize(8.5);
+    setTxt(C_WHITE);
+    doc.text(cat.name.toUpperCase(), MARGIN + 8, y + 8);
 
     if (catTotal > 0) {
+      setFill([245,180,50]);
+      fillRect(W - MARGIN - 32, y + 2.5, 30, 7, 2);
       doc.setFont('helvetica', 'bold');
-      doc.setFontSize(8);
-      setTxt(C_AMBER);
-      doc.text(`R$ ${catTotal.toFixed(2).replace('.', ',')}`, W - MARGIN, y + 7, { align: 'right' });
+      doc.setFontSize(7.5);
+      setTxt([50, 30, 0]);
+      doc.text(`R$ ${catTotal.toFixed(2).replace('.', ',')}`, W - MARGIN - 2, y + 8, { align: 'right' });
     }
     y += 14;
 
-    // Cabeçalho das colunas
+    // Cabeçalho colunas
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(6);
     setTxt(C_MUTED);
-    const COL_NAME  = MARGIN + 3;
-    const COL_BRAND = MARGIN + 80;
-    const COL_QTD   = MARGIN + 110;
-    const COL_UN    = MARGIN + 125;
-    const COL_UNIT  = MARGIN + 140;
-    const COL_SUB   = W - MARGIN;
-
-    doc.text('ITEM', COL_NAME, y);
+    doc.text('ITEM / DESCRICAO', COL_NAME, y);
     doc.text('MARCA', COL_BRAND, y);
     doc.text(state.col1Label.toUpperCase(), COL_QTD, y);
     doc.text(state.col2Label.toUpperCase(), COL_UN, y);
-    doc.text('R$ UNIT.', COL_UNIT, y);
+    doc.text('R$/UN', COL_UNIT, y);
     doc.text('SUBTOTAL', COL_SUB, y, { align: 'right' });
     y += 1.5;
 
-    // Linha separadora
     setDraw(C_BORDER); doc.setLineWidth(0.2);
     doc.line(MARGIN, y, W - MARGIN, y);
     y += 3;
 
-    // Itens
+    // ── Itens ──
     cat.items.forEach((item, idx) => {
-      if (y + 12 > 280) { doc.addPage(); setFill(C_BG); rect(0,0,W,297); y = 14; }
-
-      const q = parseFloat(item.col1) || 0;
-      const p = parseFloat(item.price) || 0;
+      const q  = parseFloat(item.col1) || 0;
+      const p  = parseFloat(item.price) || 0;
       const sub = q * p;
-      const rowH = item.obs ? 13 : 9;
+      const pm = parseFloat(item.pesoMedio) || 0;
+      const pk = parseFloat(item.precoKg) || 0;
 
-      // Fundo alternado nos itens
+      // Linhas extras: obs e/ou peso/kg
+      const hasObs    = !!item.obs;
+      const hasPesoKg = pm > 0 && pk > 0;
+      const extraLines = (hasObs ? 1 : 0) + (hasPesoKg ? 1 : 0);
+      const rowH = 9 + extraLines * 4.5;
+
+      if (y + rowH + 2 > 280) { newPage(); y = 14; }
+
+      // Fundo alternado
       if (idx % 2 === 0) {
-        setFill([18, 36, 26]);
-        rect(MARGIN, y - 1.5, CONTENT_W, rowH, 1.5);
+        setFill(C_ROW_ALT);
+        fillRect(MARGIN, y - 1.5, CONTENT_W, rowH, 1.5);
       }
 
+      // Nome item (sem emoji — emojis falham em jsPDF com fontes padrão)
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(8.5);
       setTxt(C_TEXT);
-      const nameText = `${item.emoji}  ${item.name || '(sem nome)'}`;
-      doc.text(nameText, COL_NAME, y + 4);
+      const nameStr = item.name || '(sem nome)';
+      // truncar nome se muito longo (coluna tem ~72mm)
+      const maxNameChars = 38;
+      const displayName = nameStr.length > maxNameChars ? nameStr.slice(0, maxNameChars - 1) + '…' : nameStr;
+      doc.text(displayName, COL_NAME, y + 5);
 
+      // Marca
       if (item.brand) {
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(7);
-        setTxt(C_ACCENT2);
-        const brandText = item.brand.length > 14 ? item.brand.slice(0,13)+'…' : item.brand;
-        doc.text(brandText, COL_BRAND, y + 4);
+        setTxt(C_ACCENT);
+        const br = item.brand.length > 13 ? item.brand.slice(0,12)+'…' : item.brand;
+        doc.text(br, COL_BRAND, y + 5);
       }
 
+      // Qtd / Un / Preço
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(8);
       setTxt(C_TEXT);
-      if (item.col1) doc.text(item.col1, COL_QTD, y + 4);
-      if (item.col2) doc.text(item.col2, COL_UN,  y + 4);
-      if (item.price) {
-        setTxt(C_TEXT);
-        doc.text(`${p.toFixed(2).replace('.', ',')}`, COL_UNIT, y + 4);
-      }
+      if (item.col1) doc.text(item.col1, COL_QTD, y + 5);
+      if (item.col2) doc.text(item.col2, COL_UN,  y + 5);
+      if (p > 0) doc.text(p.toFixed(2).replace('.', ','), COL_UNIT, y + 5);
 
+      // Subtotal
       if (sub > 0) {
         doc.setFont('helvetica', 'bold');
-        doc.setFontSize(8);
+        doc.setFontSize(8.5);
         setTxt(C_AMBER);
-        doc.text(`R$ ${sub.toFixed(2).replace('.', ',')}`, COL_SUB, y + 4, { align: 'right' });
+        doc.text(`R$ ${sub.toFixed(2).replace('.', ',')}`, COL_SUB, y + 5, { align: 'right' });
       }
 
-      if (item.obs) {
+      let extraY = y + 9;
+
+      // Peso médio / preço kg
+      if (hasPesoKg) {
         doc.setFont('helvetica', 'italic');
-        doc.setFontSize(7);
+        doc.setFontSize(6.8);
         setTxt(C_MUTED);
-        doc.text(`↳ ${item.obs}`, COL_NAME + 4, y + 9);
+        doc.text(`Peso med.: ${pm}kg/un  |  R$ ${pk.toFixed(2).replace('.',',')}/kg  =>  R$ ${(pm*pk).toFixed(2).replace('.',',')}/un`, COL_NAME + 4, extraY);
+        extraY += 4.5;
+      }
+
+      // Obs
+      if (hasObs) {
+        doc.setFont('helvetica', 'italic');
+        doc.setFontSize(6.8);
+        setTxt(C_MUTED);
+        const obsStr = item.obs.length > 80 ? item.obs.slice(0,79)+'…' : item.obs;
+        doc.text(`Obs: ${obsStr}`, COL_NAME + 4, extraY);
       }
 
       y += rowH + 1;
@@ -1580,72 +2105,51 @@ function exportPDF() {
     y += 5;
   });
 
-  // ══════════════════════════════════════
-  //  RODAPÉ — TOTAL FINAL
-  // ══════════════════════════════════════
-  if (y + 28 > 280) { doc.addPage(); setFill(C_BG); rect(0,0,W,297); y = 14; }
+  // ════════════════════════
+  //  TOTAL FINAL
+  // ════════════════════════
+  if (y + 30 > 280) { newPage(); y = 14; }
 
-  // Linha separadora
-  setDraw(C_ACCENT);
-  doc.setLineWidth(0.5);
+  setDraw(C_ACCENT); doc.setLineWidth(0.6);
   doc.line(MARGIN, y, W - MARGIN, y);
-  y += 5;
+  y += 6;
 
   // Caixa total
-  setFill(C_CARD);
-  rect(MARGIN, y, CONTENT_W, 22, 4);
-  setDraw(C_ACCENT); doc.setLineWidth(0.5);
-  doc.roundedRect(MARGIN, y, CONTENT_W, 22, 4, 4, 'S');
+  setFill(C_HEADER);
+  fillRect(MARGIN, y, CONTENT_W, 26, 4);
+  setFill(C_ACCENT_L);
+  fillRect(MARGIN, y, 4, 26, 2);
+  setDraw(C_ACCENT_L); doc.setLineWidth(0.5);
+  doc.roundedRect(MARGIN, y, CONTENT_W, 26, 4, 4, 'S');
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  setTxt(C_MUTED);
-  doc.text('TOTAL GERAL', MARGIN + 8, y + 8);
+  doc.setFontSize(8);
+  setTxt([150, 200, 175]);
+  doc.text('TOTAL GERAL', MARGIN + 10, y + 9);
 
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(18);
-  setTxt(C_ACCENT);
-  doc.text(`R$ ${grand.toFixed(2).replace('.', ',')}`, W - MARGIN - 8, y + 14, { align: 'right' });
+  doc.setFontSize(20);
+  setTxt(C_ACCENT_L);
+  doc.text(`R$ ${grand.toFixed(2).replace('.', ',')}`, W - MARGIN - 6, y + 17, { align: 'right' });
 
   if (perPerson) {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
-    setTxt(C_ACCENT2);
-    doc.text(`👤 Por pessoa: R$ ${perPerson}`, MARGIN + 8, y + 17);
+    setTxt([170, 220, 195]);
+    doc.text(`Por pessoa: R$ ${perPerson}`, MARGIN + 10, y + 20);
   }
 
-  y += 30;
-
-  // ── RODAPÉ MARCA ──
-  setFill(C_SURFACE);
-  rect(0, 285, W, 12);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7);
-  setTxt(C_MUTED);
-  doc.text('🌿 Natitur · natureza · viagens', MARGIN, 291);
-  doc.text(`Gerado em ${dateStr}`, W - MARGIN, 291, { align: 'right' });
-
-  // Fundo geral (aplicado como retângulo de fundo em todas as páginas visitadas)
-  // Aplica fundo verde-escuro em cada página
+  // ── RODAPÉ em todas as páginas ──
   const totalPages = doc.internal.getNumberOfPages();
   for (let pg = 1; pg <= totalPages; pg++) {
     doc.setPage(pg);
-    // Fundo já foi aplicado via rect no início e nas quebras de página
-    // Garantir rodapé em todas as páginas
-    if (pg < totalPages || pg === 1) {
-      setFill(C_SURFACE);
-      doc.rect(0, 285, W, 12, 'F');
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(7);
-      setTxt(C_MUTED);
-      doc.text('🌿 Natitur · natureza · viagens', MARGIN, 291);
-      doc.text(`Gerado em ${dateStr}`, W - MARGIN, 291, { align: 'right' });
-    }
+    drawFooter();
   }
 
   const filename = `Natitur_${(state.eventName || 'Orcamento').replace(/\s+/g, '_')}_${dateStr.replace(/\//g, '-')}.pdf`;
   doc.save(filename);
 }
+
 
 
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
@@ -1659,6 +2163,7 @@ document.querySelectorAll('.modal-overlay').forEach(o => {
 // ════════════════════════════════════════
 //  INIT
 // ════════════════════════════════════════
+initSlots();
 loadState();
 render();
 
