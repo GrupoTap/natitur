@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Natitur – Orçamento</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 :root {
   --bg: #0b1a12;
@@ -467,6 +468,25 @@ body {
 
 .btn-copy.copied { background: #2e9e63; }
 
+.btn-pdf {
+  width: 100%;
+  background: #102019;
+  border: 1.5px solid var(--accent);
+  border-radius: 12px;
+  color: var(--accent);
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 14px;
+  cursor: pointer;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn-pdf:active { background: rgba(61,184,122,0.15); }
+
 /* emoji */
 .emoji-picker {
   display: grid;
@@ -756,6 +776,7 @@ body {
     <div class="modal-title">📋 Resumo para compartilhar</div>
     <div class="share-preview" id="sharePreview"></div>
     <button class="btn-copy" id="btnCopy" onclick="copyShare()">📋 Copiar tudo</button>
+    <button class="btn-pdf" onclick="exportPDF()">📄 Exportar PDF</button>
     <div class="modal-row">
       <button class="btn-modal-cancel" onclick="closeModal('shareModal')">Fechar</button>
     </div>
@@ -1300,8 +1321,333 @@ function copyShare() {
 }
 
 // ════════════════════════════════════════
-//  UTILS
+//  EXPORT PDF — NATITUR LAYOUT
 // ════════════════════════════════════════
+function exportPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+
+  const W = 210; // page width mm
+  const MARGIN = 14;
+  const CONTENT_W = W - MARGIN * 2;
+
+  // ── CORES ──
+  const C_BG      = [11, 26, 18];
+  const C_SURFACE = [16, 32, 25];
+  const C_CARD    = [22, 42, 30];
+  const C_BORDER  = [35, 71, 51];
+  const C_ACCENT  = [61, 184, 122];
+  const C_ACCENT2 = [126, 232, 176];
+  const C_AMBER   = [245, 166, 35];
+  const C_TEXT    = [232, 245, 238];
+  const C_MUTED   = [106, 158, 128];
+  const C_WHITE   = [255, 255, 255];
+
+  // ── HELPERS ──
+  function setFill(rgb) { doc.setFillColor(...rgb); }
+  function setDraw(rgb) { doc.setDrawColor(...rgb); }
+  function setTxt(rgb)  { doc.setTextColor(...rgb); }
+  function rect(x, y, w, h, r) {
+    if (r) doc.roundedRect(x, y, w, h, r, r, 'F');
+    else doc.rect(x, y, w, h, 'F');
+  }
+
+  let y = 0;
+
+  // ══════════════════════════════════════
+  //  CABEÇALHO
+  // ══════════════════════════════════════
+  // Fundo escuro do header
+  setFill(C_BG);
+  rect(0, 0, W, 52);
+
+  // Borda inferior do header
+  setDraw(C_BORDER);
+  doc.setLineWidth(0.4);
+  doc.line(0, 52, W, 52);
+
+  // Logo SVG desenhado manualmente
+  const lx = MARGIN, ly = 10;
+
+  // Círculo (lua/sol)
+  setDraw(C_ACCENT); doc.setLineWidth(0.8);
+  doc.circle(lx + 14, ly + 14, 7, 'S');
+
+  // Montanhas
+  setDraw(C_ACCENT2); doc.setLineWidth(1);
+  doc.lines([[6,-9],[4,5],[4,-7],[6,11]], lx+5, ly+18, [1,1], 'S');
+
+  // Raios do sol (amber)
+  setDraw(C_AMBER); doc.setLineWidth(0.8);
+  doc.line(lx+14, ly+2,  lx+14, ly+5);
+  doc.line(lx+19, ly+4,  lx+17.5, ly+6.5);
+  doc.line(lx+9,  ly+4,  lx+10.5, ly+6.5);
+  doc.line(lx+22, ly+8,  lx+20,   ly+9.5);
+  doc.line(lx+6,  ly+8,  lx+8,    ly+9.5);
+
+  // Linha do chão
+  setDraw(C_BORDER); doc.setLineWidth(0.8);
+  doc.line(lx+3, ly+20, lx+25, ly+20);
+
+  // Nome "Natitur"
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(22);
+  setTxt(C_ACCENT2);
+  doc.text('Natitur', lx + 32, ly + 13);
+
+  // Tagline
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  setTxt(C_MUTED);
+  doc.text('NATUREZA · VIAGENS', lx + 32, ly + 18);
+
+  // Nome do evento (direita)
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  setTxt(C_ACCENT);
+  const evName = state.eventName || 'Evento';
+  doc.text(evName, W - MARGIN, ly + 13, { align: 'right' });
+
+  // Data
+  const dateStr = new Date().toLocaleDateString('pt-BR');
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  setTxt(C_MUTED);
+  doc.text(dateStr, W - MARGIN, ly + 19, { align: 'right' });
+
+  // ── CHIPS DE TOTAIS ──
+  let grand = 0;
+  let totalItems = 0;
+  state.categories.forEach(cat => {
+    cat.items.forEach(item => {
+      const q = parseFloat(item.col1) || 0;
+      const p = parseFloat(item.price) || 0;
+      grand += q * p;
+      totalItems++;
+    });
+  });
+  const perPerson = (state.people && grand > 0)
+    ? (grand / parseFloat(state.people)).toFixed(2).replace('.', ',')
+    : null;
+
+  const chips = [
+    { label: 'ITENS',    value: String(totalItems) },
+    { label: 'PESSOAS',  value: state.people || '—' },
+    { label: 'TOTAL',    value: `R$ ${grand.toFixed(2).replace('.', ',')}`, highlight: true },
+  ];
+  if (perPerson) chips.push({ label: 'POR PESSOA', value: `R$ ${perPerson}` });
+
+  const chipW = (CONTENT_W - (chips.length - 1) * 3) / chips.length;
+  chips.forEach((chip, i) => {
+    const cx = MARGIN + i * (chipW + 3);
+    const cy = 55;
+    setFill(C_SURFACE);
+    rect(cx, cy, chipW, 16, 3);
+    setDraw(C_BORDER); doc.setLineWidth(0.3);
+    doc.roundedRect(cx, cy, chipW, 16, 3, 3, 'S');
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6);
+    setTxt(C_MUTED);
+    doc.text(chip.label, cx + chipW / 2, cy + 5.5, { align: 'center' });
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(chip.highlight ? 11 : 9);
+    setTxt(chip.highlight ? C_ACCENT : C_TEXT);
+    doc.text(chip.value, cx + chipW / 2, cy + 12, { align: 'center' });
+  });
+
+  y = 80;
+
+  // ══════════════════════════════════════
+  //  CATEGORIAS
+  // ══════════════════════════════════════
+  state.categories.forEach(cat => {
+    // Calcular total da categoria
+    let catTotal = 0;
+    cat.items.forEach(item => {
+      const q = parseFloat(item.col1) || 0;
+      const p = parseFloat(item.price) || 0;
+      catTotal += q * p;
+    });
+
+    // Verificar quebra de página (deixar espaço para header da categoria + 1 item)
+    if (y + 28 > 280) { doc.addPage(); setFill(C_BG); rect(0,0,W,297); y = 14; }
+
+    // Header da categoria
+    setFill(C_SURFACE);
+    rect(MARGIN, y, CONTENT_W, 11, 2);
+    setDraw(C_BORDER); doc.setLineWidth(0.3);
+    doc.roundedRect(MARGIN, y, CONTENT_W, 11, 2, 2, 'S');
+
+    // Borda esquerda colorida (accent)
+    setFill(C_ACCENT);
+    rect(MARGIN, y, 2.5, 11, 1);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    setTxt(C_TEXT);
+    doc.text(`${cat.emoji}  ${cat.name.toUpperCase()}`, MARGIN + 7, y + 7);
+
+    if (catTotal > 0) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      setTxt(C_AMBER);
+      doc.text(`R$ ${catTotal.toFixed(2).replace('.', ',')}`, W - MARGIN, y + 7, { align: 'right' });
+    }
+    y += 14;
+
+    // Cabeçalho das colunas
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6);
+    setTxt(C_MUTED);
+    const COL_NAME  = MARGIN + 3;
+    const COL_BRAND = MARGIN + 80;
+    const COL_QTD   = MARGIN + 110;
+    const COL_UN    = MARGIN + 125;
+    const COL_UNIT  = MARGIN + 140;
+    const COL_SUB   = W - MARGIN;
+
+    doc.text('ITEM', COL_NAME, y);
+    doc.text('MARCA', COL_BRAND, y);
+    doc.text(state.col1Label.toUpperCase(), COL_QTD, y);
+    doc.text(state.col2Label.toUpperCase(), COL_UN, y);
+    doc.text('R$ UNIT.', COL_UNIT, y);
+    doc.text('SUBTOTAL', COL_SUB, y, { align: 'right' });
+    y += 1.5;
+
+    // Linha separadora
+    setDraw(C_BORDER); doc.setLineWidth(0.2);
+    doc.line(MARGIN, y, W - MARGIN, y);
+    y += 3;
+
+    // Itens
+    cat.items.forEach((item, idx) => {
+      if (y + 12 > 280) { doc.addPage(); setFill(C_BG); rect(0,0,W,297); y = 14; }
+
+      const q = parseFloat(item.col1) || 0;
+      const p = parseFloat(item.price) || 0;
+      const sub = q * p;
+      const rowH = item.obs ? 13 : 9;
+
+      // Fundo alternado nos itens
+      if (idx % 2 === 0) {
+        setFill([18, 36, 26]);
+        rect(MARGIN, y - 1.5, CONTENT_W, rowH, 1.5);
+      }
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8.5);
+      setTxt(C_TEXT);
+      const nameText = `${item.emoji}  ${item.name || '(sem nome)'}`;
+      doc.text(nameText, COL_NAME, y + 4);
+
+      if (item.brand) {
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7);
+        setTxt(C_ACCENT2);
+        const brandText = item.brand.length > 14 ? item.brand.slice(0,13)+'…' : item.brand;
+        doc.text(brandText, COL_BRAND, y + 4);
+      }
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      setTxt(C_TEXT);
+      if (item.col1) doc.text(item.col1, COL_QTD, y + 4);
+      if (item.col2) doc.text(item.col2, COL_UN,  y + 4);
+      if (item.price) {
+        setTxt(C_TEXT);
+        doc.text(`${p.toFixed(2).replace('.', ',')}`, COL_UNIT, y + 4);
+      }
+
+      if (sub > 0) {
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        setTxt(C_AMBER);
+        doc.text(`R$ ${sub.toFixed(2).replace('.', ',')}`, COL_SUB, y + 4, { align: 'right' });
+      }
+
+      if (item.obs) {
+        doc.setFont('helvetica', 'italic');
+        doc.setFontSize(7);
+        setTxt(C_MUTED);
+        doc.text(`↳ ${item.obs}`, COL_NAME + 4, y + 9);
+      }
+
+      y += rowH + 1;
+    });
+
+    y += 5;
+  });
+
+  // ══════════════════════════════════════
+  //  RODAPÉ — TOTAL FINAL
+  // ══════════════════════════════════════
+  if (y + 28 > 280) { doc.addPage(); setFill(C_BG); rect(0,0,W,297); y = 14; }
+
+  // Linha separadora
+  setDraw(C_ACCENT);
+  doc.setLineWidth(0.5);
+  doc.line(MARGIN, y, W - MARGIN, y);
+  y += 5;
+
+  // Caixa total
+  setFill(C_CARD);
+  rect(MARGIN, y, CONTENT_W, 22, 4);
+  setDraw(C_ACCENT); doc.setLineWidth(0.5);
+  doc.roundedRect(MARGIN, y, CONTENT_W, 22, 4, 4, 'S');
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  setTxt(C_MUTED);
+  doc.text('TOTAL GERAL', MARGIN + 8, y + 8);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(18);
+  setTxt(C_ACCENT);
+  doc.text(`R$ ${grand.toFixed(2).replace('.', ',')}`, W - MARGIN - 8, y + 14, { align: 'right' });
+
+  if (perPerson) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    setTxt(C_ACCENT2);
+    doc.text(`👤 Por pessoa: R$ ${perPerson}`, MARGIN + 8, y + 17);
+  }
+
+  y += 30;
+
+  // ── RODAPÉ MARCA ──
+  setFill(C_SURFACE);
+  rect(0, 285, W, 12);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  setTxt(C_MUTED);
+  doc.text('🌿 Natitur · natureza · viagens', MARGIN, 291);
+  doc.text(`Gerado em ${dateStr}`, W - MARGIN, 291, { align: 'right' });
+
+  // Fundo geral (aplicado como retângulo de fundo em todas as páginas visitadas)
+  // Aplica fundo verde-escuro em cada página
+  const totalPages = doc.internal.getNumberOfPages();
+  for (let pg = 1; pg <= totalPages; pg++) {
+    doc.setPage(pg);
+    // Fundo já foi aplicado via rect no início e nas quebras de página
+    // Garantir rodapé em todas as páginas
+    if (pg < totalPages || pg === 1) {
+      setFill(C_SURFACE);
+      doc.rect(0, 285, W, 12, 'F');
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      setTxt(C_MUTED);
+      doc.text('🌿 Natitur · natureza · viagens', MARGIN, 291);
+      doc.text(`Gerado em ${dateStr}`, W - MARGIN, 291, { align: 'right' });
+    }
+  }
+
+  const filename = `Natitur_${(state.eventName || 'Orcamento').replace(/\s+/g, '_')}_${dateStr.replace(/\//g, '-')}.pdf`;
+  doc.save(filename);
+}
+
+
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
 document.querySelectorAll('.modal-overlay').forEach(o => {
