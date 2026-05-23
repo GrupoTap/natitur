@@ -826,24 +826,24 @@ body {
   <div class="header-top">
     <!-- LOGO -->
     <div class="logo-wrap">
-      <svg class="logo-svg" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <!-- Sun/Moon arc -->
-        <circle cx="24" cy="28" r="10" fill="none" stroke="#3db87a" stroke-width="1.8"/>
+      <svg class="logo-svg" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Outer circle arc (gold) -->
+        <path d="M 28 4 A 24 24 0 1 1 4 28" stroke="#f5a623" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+        <!-- Circle base (dark green) -->
+        <circle cx="28" cy="28" r="22" fill="#0e3320" stroke="#234733" stroke-width="1"/>
         <!-- Mountain peaks -->
-        <polyline points="8,36 18,20 24,28 30,16 40,36" fill="none" stroke="#7ee8b0" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-        <!-- Ground line -->
-        <line x1="6" y1="36" x2="42" y2="36" stroke="#234733" stroke-width="1.5"/>
-        <!-- Sun rays -->
-        <line x1="24" y1="5" x2="24" y2="9" stroke="#f5a623" stroke-width="1.8" stroke-linecap="round"/>
-        <line x1="33" y1="8" x2="31" y2="11.5" stroke="#f5a623" stroke-width="1.5" stroke-linecap="round"/>
-        <line x1="15" y1="8" x2="17" y2="11.5" stroke="#f5a623" stroke-width="1.5" stroke-linecap="round"/>
-        <line x1="38" y1="15" x2="35" y2="17" stroke="#f5a623" stroke-width="1.4" stroke-linecap="round"/>
-        <line x1="10" y1="15" x2="13" y2="17" stroke="#f5a623" stroke-width="1.4" stroke-linecap="round"/>
-        <!-- Leaf detail -->
-        <ellipse cx="24" cy="14" rx="2.5" ry="4" fill="#3db87a" opacity="0.7" transform="rotate(-20 24 14)"/>
+        <polygon points="10,40 20,22 26,30 32,18 44,40" fill="#1a6640"/>
+        <polygon points="20,40 26,30 32,40" fill="#22804e"/>
+        <polygon points="32,40 38,26 44,40" fill="#1c7548"/>
+        <!-- Trail/river path -->
+        <path d="M 22 40 Q 26 34 28 30 Q 30 36 34 40" fill="#d4b896" opacity="0.7"/>
+        <!-- Star/compass (gold) -->
+        <path d="M 28 9 L 29.2 12.5 L 32.5 12.5 L 30 14.5 L 31 18 L 28 16 L 25 18 L 26 14.5 L 23.5 12.5 L 26.8 12.5 Z" fill="#f5a623"/>
+        <!-- Leaf curl (lower right) -->
+        <path d="M 38 38 Q 46 30 42 22 Q 36 30 38 38 Z" fill="#2e9e63" opacity="0.85"/>
       </svg>
       <div class="logo-text">
-        <div class="logo-name">Na<em>ti</em>tur</div>
+        <div class="logo-name">Na<em>tí</em>tur</div>
         <div class="logo-tagline">natureza · viagens</div>
       </div>
     </div>
@@ -862,6 +862,10 @@ body {
       <div class="label">Total</div>
       <div class="value" id="totalValue">R$ 0</div>
     </div>
+  </div>
+  <div id="familyBar" style="display:none;margin-top:6px;background:rgba(245,166,35,0.12);border:1px solid rgba(245,166,35,0.3);border-radius:8px;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;">
+    <span style="font-size:10px;color:#f5a623;text-transform:uppercase;letter-spacing:0.5px;">🏠 Por família (<span id="familyCount">—</span> famílias)</span>
+    <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;color:#f5a623;" id="familyValue">—</span>
   </div>
 </div>
 
@@ -948,11 +952,21 @@ body {
     <div class="modal-title">⚙️ Configurações</div>
     <div class="config-row">
       <div class="config-label-text">Nome do evento</div>
-      <input class="modal-input" id="cfgEventName" placeholder="Ex: Churrasco do Grupo" style="margin-bottom:0">
+      <input class="modal-input" id="cfgEventName" placeholder="Ex: Churrasco Canastra" style="margin-bottom:0">
     </div>
     <div class="config-row">
-      <div class="config-label-text">Nº de pessoas</div>
-      <input class="modal-input" id="cfgPeople" type="number" placeholder="Ex: 15" style="margin-bottom:0">
+      <div class="config-label-text">Data do churrasco</div>
+      <input class="modal-input" id="cfgEventDate" type="date" placeholder="dd/mm/aaaa" style="margin-bottom:0">
+    </div>
+    <div class="modal-row" style="margin-bottom:10px">
+      <div style="flex:1">
+        <div class="config-label-text" style="margin-bottom:5px">Nº de pessoas</div>
+        <input class="modal-input" id="cfgPeople" type="number" placeholder="Ex: 37" style="margin-bottom:0">
+      </div>
+      <div style="flex:1">
+        <div class="config-label-text" style="margin-bottom:5px">Nº de famílias</div>
+        <input class="modal-input" id="cfgFamilies" type="number" placeholder="Ex: 10" style="margin-bottom:0">
+      </div>
     </div>
     <div class="config-row">
       <div class="config-label-text">Rótulo coluna 1 (quantidade)</div>
@@ -990,6 +1004,8 @@ let _currentSlot = null; // null = não vinculado a nenhum slot
 const CANASTRA_LIST = {
   eventName: 'Churrasco Canastra',
   people: '37',
+  families: '10',
+  eventDate: '23/05/2026',
   col1Label: 'Qtd',
   col2Label: 'Un',
   savedAt: '23/05/2026',
@@ -1070,6 +1086,8 @@ function loadFromSlot(idx) {
       if (item.precoKg === undefined)   item.precoKg   = '';
     });
   });
+  if (slot.families === undefined) slot.families = '';
+  if (slot.eventDate === undefined) slot.eventDate = '';
   Object.assign(state, JSON.parse(JSON.stringify(slot)));
   localStorage.setItem(CUR_SLOT_KEY, String(idx));
   _currentSlot = idx;
@@ -1297,6 +1315,8 @@ window.addEventListener('beforeunload', e => {
 const state = {
   eventName: 'Churrasco do Grupo',
   people: '',
+  families: '',
+  eventDate: '',
   col1Label: 'Qtd',
   col2Label: 'Un',
   categories: [
@@ -1606,6 +1626,19 @@ function recalcTotals() {
   document.getElementById('totalPeople').textContent = state.people || '—';
   document.getElementById('totalValue').textContent = `R$ ${grand.toFixed(2).replace('.',',')}`;
   document.getElementById('eventNameDisplay').textContent = state.eventName;
+
+  // Family bar
+  const famBar = document.getElementById('familyBar');
+  const famCount = parseInt(state.families) || 0;
+  if (famBar) {
+    if (famCount > 0 && grand > 0) {
+      famBar.style.display = 'flex';
+      document.getElementById('familyCount').textContent = famCount;
+      document.getElementById('familyValue').textContent = `R$ ${(grand / famCount).toFixed(2).replace('.',',')}`;
+    } else {
+      famBar.style.display = 'none';
+    }
+  }
 }
 
 // ════════════════════════════════════════
@@ -1732,7 +1765,9 @@ function confirmAddCategory() {
 // ════════════════════════════════════════
 function openSettings() {
   document.getElementById('cfgEventName').value = state.eventName;
+  document.getElementById('cfgEventDate').value = state.eventDate || '';
   document.getElementById('cfgPeople').value = state.people;
+  document.getElementById('cfgFamilies').value = state.families || '';
   document.getElementById('cfgCol1').value = state.col1Label;
   document.getElementById('cfgCol2').value = state.col2Label;
   document.getElementById('settingsModal').classList.add('open');
@@ -1740,7 +1775,9 @@ function openSettings() {
 
 function saveSettings() {
   state.eventName = document.getElementById('cfgEventName').value.trim() || state.eventName;
+  state.eventDate = document.getElementById('cfgEventDate').value.trim();
   state.people    = document.getElementById('cfgPeople').value.trim();
+  state.families  = document.getElementById('cfgFamilies').value.trim();
   state.col1Label = document.getElementById('cfgCol1').value.trim() || 'Qtd';
   state.col2Label = document.getElementById('cfgCol2').value.trim() || 'Un';
   closeModal('settingsModal');
@@ -1756,10 +1793,18 @@ function saveSettings() {
 //  SHARE
 // ════════════════════════════════════════
 function buildShareText() {
-  const date = new Date().toLocaleDateString('pt-BR');
+  let eventDateDisplay = '';
+  if (state.eventDate) {
+    const parts = state.eventDate.split('-');
+    if (parts.length === 3) eventDateDisplay = `${parts[2]}/${parts[1]}/${parts[0]}`;
+    else eventDateDisplay = state.eventDate;
+  } else {
+    eventDateDisplay = new Date().toLocaleDateString('pt-BR');
+  }
   let text = `🌿 *Natitur* — ${state.eventName}\n`;
-  text += `📅 ${date}`;
+  text += `📅 ${eventDateDisplay}`;
   if (state.people) text += ` | 👥 ${state.people} pessoas`;
+  if (state.families) text += ` | 🏠 ${state.families} famílias`;
   text += `\n${'─'.repeat(30)}\n\n`;
 
   let grand = 0;
@@ -1791,6 +1836,10 @@ function buildShareText() {
     const per = grand / parseFloat(state.people);
     text += `\n👤 Por pessoa: R$ ${per.toFixed(2).replace('.',',')}`;
   }
+  if (state.families && grand > 0) {
+    const perFam = grand / parseFloat(state.families);
+    text += `\n🏠 Por família: R$ ${perFam.toFixed(2).replace('.',',')}`;
+  }
   text += `\n\n✅ _Aprovam?_`;
   return text;
 }
@@ -1813,7 +1862,7 @@ function copyShare() {
 }
 
 // ════════════════════════════════════════
-//  EXPORT PDF — NATITUR LAYOUT
+//  EXPORT PDF — NATITUR PREMIUM LAYOUT v2
 // ════════════════════════════════════════
 function exportPDF() {
   const { jsPDF } = window.jspdf;
@@ -1823,20 +1872,22 @@ function exportPDF() {
   const MARGIN = 14;
   const CONTENT_W = W - MARGIN * 2;
 
-  // ── PALETA: fundo BRANCO para máximo contraste ──
-  const C_WHITE    = [255, 255, 255];
-  const C_BG_PAGE  = [250, 253, 251];   // branco levemente esverdeado
-  const C_HEADER   = [11, 38, 24];      // verde muito escuro para cabeçalho
-  const C_ACCENT   = [45, 160, 100];    // verde médio
-  const C_ACCENT_L = [61, 184, 122];    // verde claro
-  const C_AMBER    = [200, 120, 10];    // âmbar escuro (contrasta no branco)
-  const C_TEXT     = [20, 40, 28];      // quase preto esverdeado
-  const C_MUTED    = [80, 120, 95];     // cinza-verde médio
-  const C_BORDER   = [180, 215, 195];   // borda suave
-  const C_ROW_ALT  = [237, 248, 242];   // linha alternada leve
-  const C_CAT_HDR  = [22, 68, 44];      // cabeçalho categoria escuro
-  const C_CHIP_BG  = [230, 245, 237];   // chip totais
-  const C_FOOTER   = [22, 68, 44];      // rodapé escuro
+  // ── PALETA ──
+  const C_WHITE      = [255, 255, 255];
+  const C_BG_PAGE    = [248, 252, 249];
+  const C_DARK       = [8, 28, 17];
+  const C_HEADER_MID = [14, 51, 32];
+  const C_ACCENT     = [38, 140, 85];
+  const C_ACCENT_L   = [61, 184, 122];
+  const C_AMBER      = [195, 115, 8];
+  const C_AMBER_L    = [245, 166, 35];
+  const C_TEXT       = [18, 38, 26];
+  const C_MUTED      = [85, 125, 100];
+  const C_BORDER     = [185, 220, 200];
+  const C_ROW_ALT    = [235, 248, 241];
+  const C_CAT_HDR    = [20, 60, 40];
+  const C_CHIP_BG    = [228, 244, 235];
+  const C_FOOTER     = [20, 60, 40];
 
   function setFill(rgb) { doc.setFillColor(...rgb); }
   function setDraw(rgb) { doc.setDrawColor(...rgb); }
@@ -1857,7 +1908,23 @@ function exportPDF() {
   const perPerson = (state.people && grand > 0)
     ? (grand / parseFloat(state.people)).toFixed(2).replace('.', ',')
     : null;
+  const perFamily = (state.families && grand > 0)
+    ? (grand / parseFloat(state.families)).toFixed(2).replace('.', ',')
+    : null;
   const dateStr = new Date().toLocaleDateString('pt-BR');
+  
+  // Data do churrasco formatada
+  let eventDateDisplay = '';
+  if (state.eventDate) {
+    const parts = state.eventDate.split('-');
+    if (parts.length === 3) {
+      eventDateDisplay = `${parts[2]}/${parts[1]}/${parts[0]}`;
+    } else {
+      eventDateDisplay = state.eventDate;
+    }
+  } else {
+    eventDateDisplay = dateStr;
+  }
 
   // ── Função: nova página com fundo ──
   function newPage() {
@@ -1869,104 +1936,238 @@ function exportPDF() {
   function drawFooter() {
     setFill(C_FOOTER);
     fillRect(0, 285, W, 12);
+    // Leaf decoration in footer
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7);
-    setTxt([180, 220, 200]);
+    setTxt([130, 200, 165]);
     doc.text('Natitur  |  natureza · viagens', MARGIN, 291);
     doc.text(`Gerado em ${dateStr}`, W - MARGIN, 291, { align: 'right' });
   }
 
   // ════════════════════════
-  //  PÁG. 1: FUNDO + HEADER
+  //  FUNÇÃO: desenhar logo Natitur vetorial no PDF
+  // ════════════════════════
+  function drawLogo(lx, ly, size) {
+    const s = size / 28; // scale factor (base 28)
+    const cx = lx + 14 * s;
+    const cy = ly + 14 * s;
+    const r  = 12 * s;
+
+    // Círculo de fundo escuro
+    setFill(C_DARK);
+    doc.circle(cx, cy, r, 'F');
+
+    // Arco dourado (arc path — partial circle top-right)
+    setDraw(C_AMBER_L);
+    doc.setLineWidth(1.2 * s);
+    doc.arc = doc.arc || function(){};
+    // Simulate arc: top quarter circle
+    doc.setDrawColor(...C_AMBER_L);
+    // draw partial arc using lines
+    const steps = 20;
+    const startAngle = -Math.PI * 0.9;
+    const endAngle   = -Math.PI * 0.05;
+    for (let i = 0; i < steps; i++) {
+      const a1 = startAngle + (endAngle - startAngle) * (i / steps);
+      const a2 = startAngle + (endAngle - startAngle) * ((i + 1) / steps);
+      const ra = (r + 1.5 * s);
+      doc.line(cx + ra * Math.cos(a1), cy + ra * Math.sin(a1),
+               cx + ra * Math.cos(a2), cy + ra * Math.sin(a2));
+    }
+
+    // Montanhas (polígonos)
+    setFill([22, 100, 62]);
+    const m1x = cx - 11*s, m1y = cy + 5*s;
+    const m2x = cx - 3*s,  m2y = cy - 5*s;
+    const m3x = cx + 3*s,  m3y = cy + 1*s;
+    const m4x = cx + 10*s, m4y = cy - 7*s;
+    const m5x = cx + 12*s, m5y = cy + 5*s;
+    const base = cy + 8*s;
+    doc.triangle(m1x, base, m2x, m2y, cx-5*s, base, 'F');
+    setFill([28, 120, 75]);
+    doc.triangle(m2x, m2y, m3x, m3y, cx+0*s, base, 'F');
+    setFill([22, 100, 62]);
+    doc.triangle(m3x, m3y, m4x, m4y, cx+9*s, base, 'F');
+
+    // Caminho/rio (creme)
+    setFill([210, 190, 160]);
+    doc.ellipse(cx - 2*s, cy + 5*s, 2*s, 4*s, 'F');
+
+    // Estrela/bússola (dourado)
+    const sx = cx - 2*s, sy = cy - 8*s;
+    setFill(C_AMBER_L);
+    doc.triangle(sx, sy - 3*s, sx - 1.5*s, sy + 1*s, sx + 1.5*s, sy + 1*s, 'F');
+    doc.triangle(sx, sy + 4*s, sx - 1.5*s, sy + 0*s, sx + 1.5*s, sy + 0*s, 'F');
+    doc.triangle(sx - 3*s, sy + 0.5*s, sx + 0*s, sy - 1.5*s, sx + 0*s, sy + 2.5*s, 'F');
+    doc.triangle(sx + 3*s, sy + 0.5*s, sx + 0*s, sy - 1.5*s, sx + 0*s, sy + 2.5*s, 'F');
+
+    // Folha (canto inferior)
+    setFill([45, 160, 95]);
+    doc.triangle(cx + 7*s, cy + 6*s, cx + 14*s, cy - 2*s, cx + 8*s, cy - 3*s, 'F');
+    setFill([35, 130, 75]);
+    doc.triangle(cx + 7*s, cy + 6*s, cx + 12*s, cy + 2*s, cx + 8*s, cy - 3*s, 'F');
+  }
+
+  // ════════════════════════
+  //  IMAGENS DE CHURRASCO (base64 SVG inline — evita CORS; usa gradient art)
+  //  Criamos mini-ilustrações vetoriais temáticas embutidas
+  // ════════════════════════
+  // Não há como embutir fotos reais sem CORS em jsPDF puro.
+  // Alternativa: decoração visual geométrica estilizada (smoke/flame/grill effect)
+  function drawGrillDecor(x, y, w, h) {
+    // Fundo escurecido
+    setFill([5, 20, 12]);
+    fillRect(x, y, w, h);
+
+    // Grelha lines
+    setDraw([40, 80, 55]);
+    doc.setLineWidth(0.4);
+    for (let i = 0; i <= 6; i++) {
+      const gy = y + (h / 6) * i;
+      doc.line(x, gy, x + w, gy);
+    }
+    for (let i = 0; i <= 8; i++) {
+      const gx = x + (w / 8) * i;
+      doc.line(gx, y, gx, y + h);
+    }
+
+    // Chama/brasa glow
+    setFill([180, 60, 10]);
+    doc.ellipse(x + w * 0.25, y + h * 0.7, w * 0.08, h * 0.12, 'F');
+    setFill([220, 100, 20]);
+    doc.ellipse(x + w * 0.25, y + h * 0.65, w * 0.05, h * 0.09, 'F');
+    setFill([245, 180, 20]);
+    doc.ellipse(x + w * 0.25, y + h * 0.61, w * 0.03, h * 0.06, 'F');
+
+    setFill([180, 60, 10]);
+    doc.ellipse(x + w * 0.6, y + h * 0.72, w * 0.09, h * 0.11, 'F');
+    setFill([220, 100, 20]);
+    doc.ellipse(x + w * 0.6, y + h * 0.66, w * 0.06, h * 0.08, 'F');
+    setFill([245, 180, 20]);
+    doc.ellipse(x + w * 0.6, y + h * 0.62, w * 0.035, h * 0.055, 'F');
+
+    // Smoke wisps
+    setDraw([80, 120, 95]);
+    doc.setLineWidth(0.6);
+    doc.lines([[0,-2],[1,-3],[-1,-3],[0,-3]], x + w*0.25, y + h*0.55, [1,1], 'S');
+    doc.lines([[0,-2],[-1,-3],[1,-3],[0,-3]], x + w*0.6, y + h*0.55, [1,1], 'S');
+
+    // Picanha silhouette
+    setFill([90, 35, 15]);
+    doc.roundedRect(x + w*0.1, y + h*0.35, w*0.35, h*0.25, 2, 2, 'F');
+    setFill([120, 50, 20]);
+    doc.roundedRect(x + w*0.11, y + h*0.36, w*0.33, h*0.23, 1.5, 1.5, 'F');
+    // fat cap
+    setFill([220, 190, 150]);
+    doc.roundedRect(x + w*0.11, y + h*0.36, w*0.33, h*0.07, 1.5, 1.5, 'F');
+
+    setFill([90, 35, 15]);
+    doc.roundedRect(x + w*0.5, y + h*0.38, w*0.4, h*0.2, 2, 2, 'F');
+    setFill([130, 55, 22]);
+    doc.roundedRect(x + w*0.51, y + h*0.39, w*0.38, h*0.18, 1.5, 1.5, 'F');
+    setFill([220, 190, 150]);
+    doc.roundedRect(x + w*0.51, y + h*0.39, w*0.38, h*0.06, 1.5, 1.5, 'F');
+  }
+
+  // ════════════════════════
+  //  PÁG. 1: CAPA PREMIUM
   // ════════════════════════
   setFill(C_BG_PAGE); fillRect(0, 0, W, 297);
 
-  // Header escuro
-  setFill(C_HEADER); fillRect(0, 0, W, 56);
+  // ── CAPA: faixa de grelha ilustrativa no topo ──
+  drawGrillDecor(0, 0, W, 58);
 
-  // Faixa accent no topo
-  setFill(C_ACCENT_L); fillRect(0, 0, W, 2.5);
+  // Overlay gradient escurecido sobre grelha
+  setFill([8, 28, 17]);
+  doc.setGState && doc.setGState(new doc.GState({ opacity: 0.55 }));
+  fillRect(0, 0, W, 58);
+  doc.setGState && doc.setGState(new doc.GState({ opacity: 1 }));
 
-  // Logo (desenho vetorial simples)
-  const lx = MARGIN, ly = 10;
-  // Círculo
-  setDraw(C_ACCENT_L); doc.setLineWidth(1);
-  doc.circle(lx + 13, ly + 13, 7, 'S');
-  // Montanhas
-  setDraw([200,240,220]); doc.setLineWidth(1.2);
-  doc.lines([[5,-8],[4,5],[4,-7],[6,10]], lx+4, ly+17, [1,1], 'S');
-  // Raios do sol
-  setDraw([245,190,80]); doc.setLineWidth(0.9);
-  doc.line(lx+13, ly+2, lx+13, ly+5);
-  doc.line(lx+18, ly+4, lx+16.5, ly+6.5);
-  doc.line(lx+8,  ly+4, lx+9.5,  ly+6.5);
-  doc.line(lx+21, ly+8, lx+19,   ly+9.5);
-  doc.line(lx+5,  ly+8, lx+7,    ly+9.5);
-  // Linha chão
-  setDraw([50,100,70]); doc.setLineWidth(0.7);
-  doc.line(lx+2, ly+20, lx+24, ly+20);
+  // Faixa accent dourada no topo (3px)
+  setFill(C_AMBER_L);
+  fillRect(0, 0, W, 2.5);
 
-  // Nome Natitur
+  // Logo Natitur (desenhado vetorialmente)
+  drawLogo(MARGIN, 8, 32);
+
+  // Nome Natitur ao lado da logo
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(24);
+  doc.setFontSize(26);
   setTxt([200, 240, 218]);
-  doc.text('Natitur', lx + 30, ly + 14);
+  doc.text('Natitur', MARGIN + 38, 22);
 
-  // Tagline
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7);
-  setTxt([100, 170, 135]);
-  doc.text('NATUREZA  ·  VIAGENS', lx + 30, ly + 20);
-
-  // Nome do evento + data (direita, no header escuro)
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
-  setTxt(C_ACCENT_L);
-  doc.text(state.eventName || 'Evento', W - MARGIN, ly + 12, { align: 'right' });
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
-  setTxt([120, 180, 150]);
-  doc.text(dateStr, W - MARGIN, ly + 19, { align: 'right' });
+  setTxt([100, 170, 135]);
+  doc.text('N A T U R E Z A   ·   V I A G E N S', MARGIN + 38, 29);
+
+  // Nome do evento (direita, no header)
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  setTxt(C_AMBER_L);
+  doc.text(state.eventName || 'Evento', W - MARGIN, 18, { align: 'right' });
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  setTxt([180, 230, 205]);
+  doc.text(`📅 ${eventDateDisplay}`, W - MARGIN, 27, { align: 'right' });
+
   if (state.people) {
-    doc.setFontSize(7.5);
-    setTxt([100,160,130]);
-    doc.text(`${state.people} pessoas`, W - MARGIN, ly + 25, { align: 'right' });
+    doc.setFontSize(8);
+    setTxt([130, 190, 160]);
+    doc.text(`👥 ${state.people} pessoas${state.families ? `  ·  🏠 ${state.families} famílias` : ''}`, W - MARGIN, 35, { align: 'right' });
   }
 
-  // ── CHIPS ──
+  // Linha separadora dourada
+  setFill(C_AMBER_L);
+  fillRect(0, 58, W, 1);
+
+  // ── CHIPS DE RESUMO ──
   const chips = [
-    { label: 'ITENS',     value: String(totalItems) },
-    { label: 'PESSOAS',   value: state.people || '—' },
-    { label: 'TOTAL',     value: `R$ ${grand.toFixed(2).replace('.', ',')}`, hi: true },
+    { label: 'ITENS',     value: String(totalItems),                   icon: '📦' },
+    { label: 'PESSOAS',   value: state.people || '—',                  icon: '👥' },
+    { label: 'TOTAL',     value: `R$ ${grand.toFixed(2).replace('.', ',')}`, hi: true, icon: '💰' },
   ];
-  if (perPerson) chips.push({ label: 'POR PESSOA', value: `R$ ${perPerson}` });
+  if (perPerson) chips.push({ label: 'POR PESSOA', value: `R$ ${perPerson}`, icon: '👤' });
+  if (perFamily) chips.push({ label: 'POR FAMÍLIA', value: `R$ ${perFamily}`, icon: '🏠', amber: true });
 
   const chipW = (CONTENT_W - (chips.length - 1) * 4) / chips.length;
-  const chipY = 59;
+  const chipY = 62;
   chips.forEach((chip, i) => {
     const cx = MARGIN + i * (chipW + 4);
-    setFill(chip.hi ? C_ACCENT : C_CHIP_BG);
-    fillRect(cx, chipY, chipW, 17, 3);
-    setDraw(chip.hi ? C_ACCENT_L : C_BORDER); doc.setLineWidth(0.3);
-    doc.roundedRect(cx, chipY, chipW, 17, 3, 3, 'S');
+    if (chip.hi) {
+      setFill(C_ACCENT);
+      fillRect(cx, chipY, chipW, 19, 3.5);
+      setDraw(C_ACCENT_L); doc.setLineWidth(0.5);
+      doc.roundedRect(cx, chipY, chipW, 19, 3.5, 3.5, 'S');
+    } else if (chip.amber) {
+      setFill([60, 40, 5]);
+      fillRect(cx, chipY, chipW, 19, 3.5);
+      setDraw(C_AMBER_L); doc.setLineWidth(0.5);
+      doc.roundedRect(cx, chipY, chipW, 19, 3.5, 3.5, 'S');
+    } else {
+      setFill(C_CHIP_BG);
+      fillRect(cx, chipY, chipW, 19, 3.5);
+      setDraw(C_BORDER); doc.setLineWidth(0.3);
+      doc.roundedRect(cx, chipY, chipW, 19, 3.5, 3.5, 'S');
+    }
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(6);
-    setTxt(chip.hi ? [200,255,230] : C_MUTED);
-    doc.text(chip.label, cx + chipW / 2, chipY + 5.5, { align: 'center' });
+    setTxt(chip.hi ? [200,255,230] : chip.amber ? [245,180,50] : C_MUTED);
+    doc.text(chip.label, cx + chipW / 2, chipY + 6, { align: 'center' });
 
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(chip.hi ? 11 : 9);
-    setTxt(chip.hi ? C_WHITE : C_TEXT);
-    doc.text(chip.value, cx + chipW / 2, chipY + 13, { align: 'center' });
+    doc.setFontSize(chip.hi ? 10 : chip.amber ? 9 : 8.5);
+    setTxt(chip.hi ? C_WHITE : chip.amber ? C_AMBER_L : C_TEXT);
+    doc.text(chip.value, cx + chipW / 2, chipY + 14.5, { align: 'center' });
   });
 
-  let y = 84;
+  let y = 90;
 
   // ════════════════════════
   //  CATEGORIAS
   // ════════════════════════
-  // Colunas do PDF (sem emoji)
   const COL_NAME  = MARGIN + 3;
   const COL_BRAND = MARGIN + 75;
   const COL_QTD   = MARGIN + 112;
@@ -1980,31 +2181,32 @@ function exportPDF() {
       catTotal += (parseFloat(item.col1)||0) * (parseFloat(item.price)||0);
     });
 
-    const needed = 14 + cat.items.length * 11 + 10;
+    const needed = 16 + cat.items.length * 11 + 10;
     if (y + Math.min(needed, 30) > 280) { newPage(); y = 14; }
 
     // ── Header da categoria ──
     setFill(C_CAT_HDR);
-    fillRect(MARGIN, y, CONTENT_W, 12, 2.5);
+    fillRect(MARGIN, y, CONTENT_W, 13, 3);
 
-    // Faixa accent esquerda
+    // Faixa accent esquerda (verde)
     setFill(C_ACCENT_L);
-    fillRect(MARGIN, y, 3, 12, 1.5);
+    fillRect(MARGIN, y, 3.5, 13, 2);
 
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8.5);
+    doc.setFontSize(9);
     setTxt(C_WHITE);
-    doc.text(cat.name.toUpperCase(), MARGIN + 8, y + 8);
+    doc.text(cat.name.toUpperCase(), MARGIN + 10, y + 9);
 
     if (catTotal > 0) {
-      setFill([245,180,50]);
-      fillRect(W - MARGIN - 32, y + 2.5, 30, 7, 2);
+      // Badge âmbar com total
+      setFill(C_AMBER_L);
+      fillRect(W - MARGIN - 36, y + 3, 34, 7.5, 2.5);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(7.5);
-      setTxt([50, 30, 0]);
-      doc.text(`R$ ${catTotal.toFixed(2).replace('.', ',')}`, W - MARGIN - 2, y + 8, { align: 'right' });
+      setTxt([30, 15, 0]);
+      doc.text(`R$ ${catTotal.toFixed(2).replace('.', ',')}`, W - MARGIN - 2, y + 9, { align: 'right' });
     }
-    y += 14;
+    y += 15;
 
     // Cabeçalho colunas
     doc.setFont('helvetica', 'normal');
@@ -2020,7 +2222,7 @@ function exportPDF() {
 
     setDraw(C_BORDER); doc.setLineWidth(0.2);
     doc.line(MARGIN, y, W - MARGIN, y);
-    y += 3;
+    y += 3.5;
 
     // ── Itens ──
     cat.items.forEach((item, idx) => {
@@ -2030,7 +2232,6 @@ function exportPDF() {
       const pm = parseFloat(item.pesoMedio) || 0;
       const pk = parseFloat(item.precoKg) || 0;
 
-      // Linhas extras: obs e/ou peso/kg
       const hasObs    = !!item.obs;
       const hasPesoKg = pm > 0 && pk > 0;
       const extraLines = (hasObs ? 1 : 0) + (hasPesoKg ? 1 : 0);
@@ -2044,12 +2245,11 @@ function exportPDF() {
         fillRect(MARGIN, y - 1.5, CONTENT_W, rowH, 1.5);
       }
 
-      // Nome item (sem emoji — emojis falham em jsPDF com fontes padrão)
+      // Nome
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(8.5);
       setTxt(C_TEXT);
       const nameStr = item.name || '(sem nome)';
-      // truncar nome se muito longo (coluna tem ~72mm)
       const maxNameChars = 38;
       const displayName = nameStr.length > maxNameChars ? nameStr.slice(0, maxNameChars - 1) + '…' : nameStr;
       doc.text(displayName, COL_NAME, y + 5);
@@ -2081,7 +2281,6 @@ function exportPDF() {
 
       let extraY = y + 9;
 
-      // Peso médio / preço kg
       if (hasPesoKg) {
         doc.setFont('helvetica', 'italic');
         doc.setFontSize(6.8);
@@ -2090,7 +2289,6 @@ function exportPDF() {
         extraY += 4.5;
       }
 
-      // Obs
       if (hasObs) {
         doc.setFont('helvetica', 'italic');
         doc.setFontSize(6.8);
@@ -2102,41 +2300,85 @@ function exportPDF() {
       y += rowH + 1;
     });
 
-    y += 5;
+    // Linha divisória de categoria
+    setDraw([210, 235, 220]); doc.setLineWidth(0.2);
+    doc.line(MARGIN, y + 2, W - MARGIN, y + 2);
+    y += 8;
   });
 
   // ════════════════════════
-  //  TOTAL FINAL
+  //  TOTAL FINAL — PREMIUM BOX
   // ════════════════════════
-  if (y + 30 > 280) { newPage(); y = 14; }
+  const totalBoxH = perFamily ? 38 : perPerson ? 32 : 26;
+  if (y + totalBoxH + 6 > 280) { newPage(); y = 14; }
 
-  setDraw(C_ACCENT); doc.setLineWidth(0.6);
+  // Linha decorativa antes do total
+  setDraw(C_ACCENT_L); doc.setLineWidth(0.8);
   doc.line(MARGIN, y, W - MARGIN, y);
-  y += 6;
-
-  // Caixa total
-  setFill(C_HEADER);
-  fillRect(MARGIN, y, CONTENT_W, 26, 4);
+  // Triângulo decorativo no centro
   setFill(C_ACCENT_L);
-  fillRect(MARGIN, y, 4, 26, 2);
-  setDraw(C_ACCENT_L); doc.setLineWidth(0.5);
-  doc.roundedRect(MARGIN, y, CONTENT_W, 26, 4, 4, 'S');
+  doc.triangle(W/2 - 4, y - 0.5, W/2 + 4, y - 0.5, W/2, y + 3, 'F');
+  y += 5;
 
+  // Caixa total com bordas arredondadas e degradê simulado
+  setFill(C_CAT_HDR);
+  fillRect(MARGIN, y, CONTENT_W, totalBoxH, 5);
+  // Faixa dourada no topo da caixa
+  setFill(C_AMBER_L);
+  fillRect(MARGIN, y, CONTENT_W, 4, 5);
+  setFill(C_CAT_HDR);
+  fillRect(MARGIN, y + 2, CONTENT_W, 4);
+  // Borda
+  setDraw(C_AMBER_L); doc.setLineWidth(0.7);
+  doc.roundedRect(MARGIN, y, CONTENT_W, totalBoxH, 5, 5, 'S');
+
+  // Label TOTAL GERAL
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
-  setTxt([150, 200, 175]);
-  doc.text('TOTAL GERAL', MARGIN + 10, y + 9);
+  doc.setFontSize(7.5);
+  setTxt([140, 195, 170]);
+  doc.text('TOTAL GERAL', MARGIN + 12, y + 11);
 
+  // Valor grande
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(20);
+  doc.setFontSize(22);
   setTxt(C_ACCENT_L);
-  doc.text(`R$ ${grand.toFixed(2).replace('.', ',')}`, W - MARGIN - 6, y + 17, { align: 'right' });
+  doc.text(`R$ ${grand.toFixed(2).replace('.', ',')}`, W - MARGIN - 6, y + 18, { align: 'right' });
+
+  let infoY = y + 11;
 
   if (perPerson) {
+    infoY += 6;
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
-    setTxt([170, 220, 195]);
-    doc.text(`Por pessoa: R$ ${perPerson}`, MARGIN + 10, y + 20);
+    setTxt([160, 215, 188]);
+    doc.text(`👤 Por pessoa: R$ ${perPerson}`, MARGIN + 12, infoY);
+  }
+
+  if (perFamily) {
+    infoY += 6;
+    // Destaque âmbar para o valor por família
+    setFill([55, 38, 5]);
+    fillRect(MARGIN + 8, infoY - 4.5, CONTENT_W * 0.5, 7, 2);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.5);
+    setTxt(C_AMBER_L);
+    doc.text(`🏠 Por família: R$ ${perFamily}`, MARGIN + 12, infoY);
+    if (state.families) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      setTxt([180, 145, 60]);
+      doc.text(`(${state.families} famílias)`, MARGIN + 12 + 68, infoY);
+    }
+  }
+
+  y += totalBoxH + 6;
+
+  // ── Nota de rodapé final ──
+  if (y + 12 < 278) {
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(7);
+    setTxt(C_MUTED);
+    doc.text('* Valores sujeitos a variação conforme disponibilidade dos produtos.', W / 2, y + 6, { align: 'center' });
   }
 
   // ── RODAPÉ em todas as páginas ──
@@ -2146,7 +2388,9 @@ function exportPDF() {
     drawFooter();
   }
 
-  const filename = `Natitur_${(state.eventName || 'Orcamento').replace(/\s+/g, '_')}_${dateStr.replace(/\//g, '-')}.pdf`;
+  const safeName = (state.eventName || 'Orcamento').replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_\-]/g, '');
+  const safeDate = eventDateDisplay.replace(/\//g, '-');
+  const filename = `Natitur_${safeName}_${safeDate}.pdf`;
   doc.save(filename);
 }
 
